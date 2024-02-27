@@ -1,0 +1,14 @@
+[Unit]
+Description=Spotipi Watchers Service
+After=redis-server.service
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/spotipi
+ExecStart=python reader.py
+EnvironmentFile=-/etc/spotipi-watchers/spotipi-watchers.conf
+Environment=REDIS_HOST=127.0.0.1
+Environment=REDIS_PORT=6379
+
+[Install]
+WantedBy=multi-user.target

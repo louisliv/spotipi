@@ -1,0 +1,138 @@
+version: '2.4'
+
+services:
+  cache:
+    image: redis:6.2-alpine
+    container_name: spotify-redis
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - cache:/data
+  spotipi-server:
+    command: uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+    container_name: spotipi-server
+    build:
+      context: ./src
+    image: spotipi-server
+    depends_on:
+      - cache
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/:/usr/src/app/
+    privileged: true
+    environment:
+      SPOTIPY_CLIENT_ID: ${SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${SPOTIPY_CLIENT_SECRET}
+      SPOTIFY_DEVICE_ID: ${SPOTIFY_DEVICE_ID}
+      SPOTIFY_AUTH_TOKEN: ${SPOTIFY_AUTH_TOKEN}
+      SPOTIFY_USERNAME: ${SPOTIFY_USERNAME}
+      SECRET_KEY: ${SECRET_KEY}
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      PULSE_SERVER: unix:/run/user/1000/pulse/native
+      ENV: development
+    links:
+      - cache
+    devices:
+      - "/dev/snd:/dev/snd"
+  spotipi-player:
+    command: jurigged player_service.py --watch /usr/src/app/
+    container_name: spotipi-player
+    build:
+      context: ./src
+    image: spotipi-player
+    depends_on:
+      - cache
+    volumes:
+      - ./src/:/usr/src/app/
+    privileged: true
+    environment:
+      SPOTIPY_CLIENT_ID: ${SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${SPOTIPY_CLIENT_SECRET}
+      SPOTIFY_DEVICE_ID: ${SPOTIFY_DEVICE_ID}
+      SPOTIFY_AUTH_TOKEN: ${SPOTIFY_AUTH_TOKEN}
+      SPOTIFY_USERNAME: ${SPOTIFY_USERNAME}
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      PULSE_SERVER: unix:/run/user/1000/pulse/native
+      ENV: development
+    links:
+      - cache
+  spotipi-scanner:
+    command: jurigged scanner_service.py --watch /usr/src/app/
+    container_name: spotipi-scanner
+    build:
+      context: ./src
+    image: spotipi-scanner
+    depends_on:
+      - cache
+    volumes:
+      - ./src/:/usr/src/app/
+    privileged: true
+    environment:
+      SPOTIPY_CLIENT_ID: ${SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${SPOTIPY_CLIENT_SECRET}
+      SPOTIFY_DEVICE_ID: ${SPOTIFY_DEVICE_ID}
+      SPOTIFY_AUTH_TOKEN: ${SPOTIFY_AUTH_TOKEN}
+      SPOTIFY_USERNAME: ${SPOTIFY_USERNAME}
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      ENV: development
+    links:
+      - cache
+  spotipi-notifications:
+    command: jurigged notifications_service.py --watch /usr/src/app/
+    container_name: spotipi-notifications
+    build:
+      context: ./src
+    image: spotipi-notifications
+    depends_on:
+      - cache
+    volumes:
+      - ./src/:/usr/src/app/
+      - /dev/snd:/dev/snd
+      - /etc/modprobe.d:/etc/modprobe.d
+    privileged: true
+    environment:
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      PULSE_SERVER: unix:/run/user/1000/pulse/native
+      ENV: development
+    devices:
+      - "/dev/snd:/dev/snd"
+      - "/etc/modprobe.d:/etc/modprobe.d"
+    links:
+      - cache
+  rfid-reader:
+    command: jurigged /usr/src/app/reader.py --watch /usr/src/app/
+    container_name: rfid-reader
+    build:
+      context: ./src
+    image: rfid-reader
+    volumes:
+      - ./src/:/usr/src/app/
+    privileged: true
+    environment:
+      SPOTIPY_CLIENT_ID: ${SPOTIPY_CLIENT_ID}
+      SPOTIPY_CLIENT_SECRET: ${SPOTIPY_CLIENT_SECRET}
+      SPOTIFY_DEVICE_ID: ${SPOTIFY_DEVICE_ID}
+      SPOTIFY_AUTH_TOKEN: ${SPOTIFY_AUTH_TOKEN}
+      SPOTIFY_USERNAME: ${SPOTIFY_USERNAME}
+      SECRET_KEY: ${SECRET_KEY}
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      PULSE_SERVER: unix:/run/user/1000/pulse/native
+      ENV: development
+    links:
+      - cache
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/snd:/dev/snd"
+    depends_on:
+      - cache
+volumes:
+  cache:
+    driver: local

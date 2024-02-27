@@ -1,0 +1,15 @@
+[Unit]
+Description=Spotipi Service
+After=redis-server.service
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/spotipi
+ExecStart=/home/pi/.local/bin/uvicorn server:app --host 0.0.0.0 --port 8000
+EnvironmentFile=-/etc/spotipi-watchers/spotipi-watchers.conf
+Environment=REDIS_HOST=127.0.0.1
+Environment=REDIS_PORT=6379
+LogLevelMax=6
+
+[Install]
+WantedBy=multi-user.target
