@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 
-import { Table, Button } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 
 import { Link, useNavigate } from "react-router-dom";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencil, faTrash, faPlay } from "@fortawesome/free-solid-svg-icons";
-
-import { capitalize } from "../utils/utils";
+import RFID from "../types/RFID";
+import RFIDTable from "../components/RFIDTable";
 
 function Home() {
-  const [rfids, setRfids] = useState([])
+  const [rfids, setRfids] = useState<RFID[]>([])
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,7 +20,7 @@ function Home() {
     getRfids();
   }, []);
 
-  const deleteRfid = (event: any, rfid: any) => {
+  const deleteRfid = (rfid: RFID) => {
     fetch(`/api/rfid_numbers/${rfid.id}`, {
       method: "DELETE",
       headers: {
@@ -31,7 +29,7 @@ function Home() {
     })
       .then(response => response.json())
       .then(data => {
-        const newRfids = rfids.filter((item: any) => item.id !== rfid.id);
+        const newRfids = rfids.filter((item: RFID) => item.id !== rfid.id);
         setRfids(newRfids);
       })
       .catch(error => {
@@ -39,7 +37,7 @@ function Home() {
       });
   }
 
-  const playRfid = async (event: any, rfid: any) => {
+  const playRfid = async (rfid: RFID) => {
     try {
       const response = await fetch(`/api/rfid_numbers/play`, {
         method: "POST",
@@ -55,7 +53,7 @@ function Home() {
     }
   }
 
-  const navigateToRfidModify = (event: any, rfid: any) => {
+  const navigateToRfidModify = (rfid: RFID) => {
     navigate("/rfids/modify", { state: { rfid: rfid } });
   }
 
@@ -67,42 +65,7 @@ function Home() {
           <Button variant="success">Scan</Button>
         </Link>
       </div>
-      <Table>
-        <thead>
-          <tr>
-            <th>Id</th>
-            <th>RFID</th>
-            <th>Spotify Token</th>
-            <th>Token Type</th>
-            <th>Spotify Name</th>
-            <th></th>
-          </tr>
-          {rfids.map((rfid: any) => {
-            return (
-              <tr key={rfid.id}>
-                <td>{rfid.id}</td>
-                <td>{rfid.number}</td>
-                <td>{rfid.spotify_token}</td>
-                <td>{capitalize(rfid.spotify_token_type)}</td>
-                <td>{rfid.spotify_name}</td>
-                <td>
-                  <div className="d-flex justify-content-end align-items-center" >
-                    <Button variant="success" className="me-3" onClick={(event) => playRfid(event, rfid)}>
-                      <FontAwesomeIcon icon={faPlay} />
-                    </Button>
-                    <Button variant="primary" className="me-3" onClick={(event) => navigateToRfidModify(event, rfid)}>
-                      <FontAwesomeIcon icon={faPencil} />
-                    </Button>
-                    <Button variant="danger" onClick={(event) => deleteRfid(event, rfid)}>
-                      <FontAwesomeIcon icon={faTrash}/>
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            )
-          })}
-        </thead>
-      </Table>
+      <RFIDTable rfids={rfids} onPlay={playRfid} onDelete={deleteRfid} onModify={navigateToRfidModify} />
     </div>
   );
 }

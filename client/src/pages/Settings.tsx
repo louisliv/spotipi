@@ -9,7 +9,6 @@ const Settings = () => {
     fetch("/api/settings/")
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
         setSettings(data);
       });
   }, []);
