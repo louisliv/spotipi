@@ -9,11 +9,12 @@ import useWebSocket from "react-use-websocket";
 import { Button } from "react-bootstrap";
 
 import { baseWSUrl } from "../utils/utils";
+import RFID from "../types/RFID";
 
 const WS_URL = `ws://${baseWSUrl}/api/rfid_numbers/ws/rfid_number`;
 
 function Scanner() {
-  const [scannedRfid, setScannedRfid] = useState<any | null>(null);
+  const [scannedRfid, setScannedRfid] = useState<RFID | null>(null);
   const [scanning, setScanning] = useState(true);
   const [scanSuccessful, setScanSuccessful] = useState(false);
   const [beatClass, setBeatClass] = useState("fa-beat-fade");
@@ -31,7 +32,7 @@ function Scanner() {
         setScanning(false)
       }
     }
-   });
+  });
 
   const tryAgain = (event: any) => {
     setScanning(true)

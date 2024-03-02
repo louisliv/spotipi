@@ -7,6 +7,8 @@ import { Form, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
+import { capitalize } from "../../utils/utils";
+
 const RfidModify = () => {
   const { state } = useLocation();
   const [fetchingFromSpotify, setFetchingFromSpotify] = useState(false);
@@ -26,6 +28,7 @@ const RfidModify = () => {
     if (rfid?.id) {
       setModifyType("Update");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -40,6 +43,13 @@ const RfidModify = () => {
       setFormIsValid(false);
     }
   }, [modifiedRfid])
+
+  const tokenTypeOptions = [
+    "artist",
+    "album",
+    "playlist",
+    "track"
+  ]
 
   const submit = async (event: any) => {
     if (rfid?.id) {
@@ -59,15 +69,15 @@ const RfidModify = () => {
       }
     } else {
       try {
-        var request = await fetch("/api/rfid_numbers/", {
+        var req = await fetch("/api/rfid_numbers/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify(modifiedRfid)
         })
-        var response = await request.json();
-        if (request.status >= 400) throw new Error(response);
+        var res = await req.json();
+        if (req.status >= 400) throw new Error(res);
         navigate("/");
       } catch (error) {
         console.log(error)
@@ -137,10 +147,9 @@ const RfidModify = () => {
             onChange={(event) => onChange(event, "spotify_token_type")}
             >
             <option value="" />
-            <option value="artist">Artist</option>
-            <option value="album">Album</option>
-            <option value="playlist">Playlist</option>
-            <option value="track">Track</option>
+            {tokenTypeOptions.map((option: string) => {
+              return <option key={option} value={option}>{capitalize(option)}</option>
+            })}
           </Form.Select>
         </Form.Group>
         <Form.Group className="mb-3" controlId="formSpotifyToken">
