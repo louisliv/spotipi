@@ -1,24 +1,29 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+
+import { Container } from 'react-bootstrap';
+import { Routes, Route } from 'react-router-dom';
+
+import Home from './pages/Home';
+import Scanner from './pages/Scanner';
+import RfidModify from './pages/rfids/Modify';
+import Settings from './pages/Settings';
+
+import SiteNavbar from './components/Navbar';
+
+import './App.scss';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <SiteNavbar />
+      <Container>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/scanner" element={<Scanner />} />
+          <Route path="/rfids/modify" element={<RfidModify />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </Container>
     </div>
   );
 }
