@@ -9,9 +9,9 @@ class PlayerService(OSService):
     def __init__(self):
         super().__init__("Player Service")
         self.event = PLAYER_EVENT_CONSUMER
-        
+
     def run(self):
-        listener = EventListener(self.redis, self.event[0], self.event[1])
+        listener = EventListener(self.manager, self.event[0], self.event[1])
         listener.run()
 
 

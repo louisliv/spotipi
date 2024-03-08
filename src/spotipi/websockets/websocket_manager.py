@@ -3,7 +3,9 @@ import asyncio
 
 from fastapi import WebSocket
 
+from spotipi.pubsub.pubsub_manager import AsyncPubSubManager
 from spotipi.redis.redis_manager import AsyncRedisPubSubManager
+
 
 class WebSocketManager:
 
@@ -13,10 +15,10 @@ class WebSocketManager:
 
         Attributes:
             rooms (dict): A dictionary to store WebSocket connections in different rooms.
-            pubsub_client (AsyncRedisPubSubManager): An instance of the AsyncRedisPubSubManager class for pub-sub functionality.
+            pubsub_client (AsyncPubSubManager): An instance of the AsyncPubSubManager class for pub-sub functionality.
         """
         self.rooms: Dict[str, List] = {}
-        self.pubsub_client = AsyncRedisPubSubManager()
+        self.pubsub_client = AsyncPubSubManager()
 
     async def add_user_to_room(self, room_id: str, websocket: WebSocket) -> None:
         """
@@ -72,7 +74,7 @@ class WebSocketManager:
             message = await pubsub_subscriber.get_message(ignore_subscribe_messages=True)
             if message is not None:
                 channel = message['channel']
-                
+
                 if channel is isinstance(channel, bytes):
                     channel = channel.decode('utf-8')
 

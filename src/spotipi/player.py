@@ -10,7 +10,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from spotipi.database import SessionLocal
 from spotipi.models import RFIDNumber
 from spotipi.utils import Settings
-from spotipi.redis.redis_manager import RedisPubSubManager
+from spotipi.pubsub.pubsub_manager import PubSubManager
 
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
@@ -39,8 +39,8 @@ class BasePlayer:
         self.device_id = device_id
         self.db = SessionLocal()
         self.settings = Settings()
-        self.redis_manager = RedisPubSubManager()
-        self.redis_manager.connect()
+        self.pubsub_manager = PubSubManager()
+        self.pubsub_manager.connect()
 
     def handle_message(self, message: dict):
         logging.info("Player message received: ", message)
@@ -88,12 +88,12 @@ class FakePlayer(BasePlayer):
         if not rfid_number:
             error_msg = "No RFID number found"
             logging.error(error_msg)
-            self.redis_manager.publish("notifications", {"message": error_msg})
+            self.pubsub_manager.publish("notifications", {"message": error_msg})
             self.play_current_track()
             return PlayerResponses.no_rfid.value
 
         logging.info(f"Playing {rfid_number.spotify_name}")
-        self.redis_manager.publish(
+        self.pubsub_manager.publish(
             "notifications", {"message": f"Playing {rfid_number.spotify_name}"}
         )
         return PlayerResponses.playing.value
@@ -143,13 +143,13 @@ class SpotifyPlayer(BasePlayer):
         if not rfid_number:
             error_msg = "No RFID number found"
             logging.error(error_msg)
-            self.redis_manager.publish("notifications", {"message": error_msg})
+            self.pubsub_manager.publish("notifications", {"message": error_msg})
             self.play_current_track()
             return PlayerResponses.no_rfid.value
 
         spotify_uri = f"spotify:{rfid_number.spotify_token_type.value}:{rfid_number.spotify_token}"
 
-        self.redis_manager.publish(
+        self.pubsub_manager.publish(
             "notifications", {"message": f"Playing {rfid_number.spotify_name}"}
         )
 

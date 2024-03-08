@@ -9,8 +9,8 @@ from spotipi.models import RFIDNumber
 import spotipi.schemas as schemas
 
 from spotipi.player import PlayerResponses
-    
-from spotipi.redis.redis_manager import RedisPubSubManager
+
+from spotipi.pubsub.pubsub_manager import PubSubManager
 
 from spotipi.utils import Config
 
@@ -54,8 +54,8 @@ def delete_rfid_number(db: Session, rfid_number: schemas.RFIDNumber):
 def set_rfid_reading_mode(reading_mode: bool, coming_from = "unknown"):
     config = Config()
     config.set_reading_mode(reading_mode)
-    
-    manager = RedisPubSubManager()
+
+    manager = PubSubManager()
     manager.connect()
 
     manager.publish("scanner", {
@@ -67,7 +67,7 @@ def set_rfid_reading_mode(reading_mode: bool, coming_from = "unknown"):
         manager.publish("player", {
             "type": PlayerResponses.paused.value
         })
-        
+
         manager.publish("notifications", {
             "message": "Reading mode"
         })
@@ -101,29 +101,29 @@ def scan_for_rfid(db: Session) -> Union[schemas.RFIDNumber, schemas.RFIDNumberCr
 
 
 def play(rfid_number: str) -> schemas.PlayerResponse:
-    manager = RedisPubSubManager()
+    manager = PubSubManager()
     manager.connect()
-    
+
     manager.publish("player", {
         "type": PlayerResponses.playing.value,
         "rfid_number": rfid_number
     })
-    
+
     response = f"Playing {rfid_number}"
-    
+
     return schemas.PlayerResponse(message=response)
 
 
 def pause() -> schemas.PlayerResponse:
-    manager = RedisPubSubManager()
+    manager = PubSubManager()
     manager.connect()
-    
+
     manager.publish("player", {
         "type": PlayerResponses.paused.value
     })
-    
+
     response = "Pausing Spotify"
-    
+
     return schemas.PlayerResponse(message=response)
 
 

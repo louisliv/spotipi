@@ -2,10 +2,15 @@ import os, json
 import redis.asyncio as aioredis
 import redis
 
+from spotipi.pubsub.pubsub_manager import PubSubManagerBase, AsyncPubSubManagerBase
+
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_PORT = os.getenv('REDIS_PORT', '6379')
 
-class AsyncRedisPubSubManager:
+
+class AsyncRedisPubSubManager(AsyncPubSubManagerBase):
+    PUBSUB_PROVIDER_PRECEDENCE = 1
+    PUBSUB_PROVIDER_KEY = "REDIS"
     """
         Initializes the AsyncRedisPubSubManager.
     """
@@ -22,10 +27,12 @@ class AsyncRedisPubSubManager:
         Returns:
             aioredis.Redis: Redis connection object.
         """
-        return aioredis.Redis(host=self.redis_host,
-                              port=self.redis_port,
-                              decode_responses=True,
-                              auto_close_connection_pool=False)
+        return aioredis.Redis(
+            host=self.redis_host,
+            port=self.redis_port,
+            decode_responses=True,
+            auto_close_connection_pool=False,
+        )
 
     async def connect(self) -> None:
         """
@@ -67,35 +74,24 @@ class AsyncRedisPubSubManager:
         await self.pubsub.unsubscribe(room_id)
 
 
-class RedisPubSubManager:
+class RedisPubSubManager(PubSubManagerBase):
     """
         Initializes the RedisPubSubManager.
     """
+    PUBSUB_PROVIDER_PRECEDENCE = 1
+    PUBSUB_PROVIDER_KEY = "REDIS"
 
     def __init__(self):
         self.redis_host = REDIS_HOST
         self.redis_port = REDIS_PORT
         self.pubsub = None
 
-    async def _get_redis_connection(self) -> redis.Redis:
-        """
-        Establishes a connection to Redis.
-
-        Returns:
-            redis.Redis: Redis connection object.
-        """
-        return redis.Redis(host=self.redis_host,
-                              port=self.redis_port,
-                              decode_responses=True,
-                              auto_close_connection_pool=False)
-
     def connect(self) -> None:
         """
         Connects to the Redis server and initializes the pubsub client.
         """
         self.redis_connection = redis.Redis(
-            host=self.redis_host,
-            port=self.redis_port
+            host=self.redis_host, port=self.redis_port, decode_responses=True
         )
         self.pubsub = self.redis_connection.pubsub()
 
@@ -109,7 +105,7 @@ class RedisPubSubManager:
         """
         self.redis_connection.publish(room_id, json.dumps(message))
 
-    def subscribe(self, room_id: str) -> aioredis.Redis:
+    def subscribe(self, room_id: str) -> redis.Redis:
         """
         Subscribes to a Redis channel.
 

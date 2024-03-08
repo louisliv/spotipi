@@ -9,7 +9,8 @@ except Exception as e:
     from spotipi.fake_mfrc import FakeSimpleMFRC as SimpleMFRC522
 
 from spotipi.fake_mfrc import FakeSimpleMFRC
-from spotipi.redis.redis_manager import RedisPubSubManager
+from spotipi.pubsub.pubsub_manager import PubSubManager
+from spotipi.redis.redis_manager import RedisPubSubManager, AsyncRedisPubSubManager
 
 
 logger = logging.getLogger(__name__)
@@ -38,21 +39,21 @@ class RFIDReader:
 class RFIDReaderListener:
     def __init__(self):
         self.reader = RFIDReader()
-        self.redis_manager = RedisPubSubManager()
-        self.redis_manager.connect()
+        self.pubsub_manager = PubSubManager()
+        self.pubsub_manager.connect()
 
     def listen(self):
         try:
             while True:
                 id, text = self.reader.read()
                 message = self.build_message(id, text)
-                logger.info(f"Sending message from Player: {message}")
-                self.redis_manager.publish("scanner", message)
-                
+                logger.info(f"Sending message from Reader: {message}")
+                self.pubsub_manager.publish("scanner", message)
+
                 sleep(5)
         finally:
             self.close()
-            
+
     def build_message(self, id, text):
         return {
             "type": "rfid_number",
