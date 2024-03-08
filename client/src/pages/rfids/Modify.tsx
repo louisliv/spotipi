@@ -5,9 +5,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Form, Button } from 'react-bootstrap';
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { capitalize } from "../../utils/utils";
+import TokenHelpModal from "../../components/TokenHelpModal";
 
 const RfidModify = () => {
   const { state } = useLocation();
@@ -17,6 +18,7 @@ const RfidModify = () => {
   const rfid = state?.rfid;
   const [modifyType, setModifyType] = useState("Create");
   const [formIsValid, setFormIsValid] = useState(false)
+  const [showTokenHelpModal, setShowTokenHelpModal] = useState(false);
 
   useEffect(() => {
     if (!rfid) {
@@ -50,6 +52,8 @@ const RfidModify = () => {
     "playlist",
     "track"
   ]
+
+  const handleHelpModalClose = () => setShowTokenHelpModal(false);
 
   const submit = async (event: any) => {
     if (rfid?.id) {
@@ -140,7 +144,15 @@ const RfidModify = () => {
             />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formSpotifyTokenType">
-          <Form.Label>Spotify Token Type</Form.Label>
+          <Form.Label>
+            Spotify Token Type
+            <Button
+              variant="link"
+              onClick={() => setShowTokenHelpModal(true)}
+              >
+              <FontAwesomeIcon icon={faQuestionCircle}/>
+            </Button>
+          </Form.Label>
           <Form.Select
             aria-label="Select Spotify Token Type"
             value={modifiedRfid.spotify_token_type}
@@ -153,7 +165,15 @@ const RfidModify = () => {
           </Form.Select>
         </Form.Group>
         <Form.Group className="mb-3" controlId="formSpotifyToken">
-          <Form.Label>Spotify Token</Form.Label>
+          <Form.Label>
+            Spotify Token
+            <Button
+              variant="link"
+              onClick={() => setShowTokenHelpModal(true)}
+              >
+              <FontAwesomeIcon icon={faQuestionCircle}/>
+            </Button>
+          </Form.Label>
           <Form.Control
             type="text"
             placeholder="Enter Spotify Token"
@@ -178,6 +198,7 @@ const RfidModify = () => {
           </Button>
         </Form.Group>
       </Form>
+      <TokenHelpModal show={showTokenHelpModal} handleClose={handleHelpModalClose} />
     </div>
   );
 }
