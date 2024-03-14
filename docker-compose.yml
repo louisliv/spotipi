@@ -115,6 +115,8 @@ services:
     volumes:
       - ./src/:/usr/src/app/
     privileged: true
+    ports:
+      - "12345:12345"
     environment:
       SPOTIPY_CLIENT_ID: ${SPOTIPY_CLIENT_ID}
       SPOTIPY_CLIENT_SECRET: ${SPOTIPY_CLIENT_SECRET}
@@ -130,7 +132,10 @@ services:
       - cache
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/bus/usb:/dev/bus/usb"
       - "/dev/snd:/dev/snd"
+      - "/etc/modprobe.d:/etc/modprobe.d"
+      - "/usr/share/usb.ids:/usr/share/usb.ids"
     depends_on:
       - cache
 volumes:

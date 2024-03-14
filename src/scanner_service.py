@@ -15,6 +15,10 @@ class Scanner(OSService):
         listener.run()
 
 
-if __name__ == "__main__":
+def main():
     service = Scanner()
     service.run()
+
+
+if __name__ == "__main__":
+    main()

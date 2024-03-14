@@ -1,5 +1,5 @@
 [Unit]
-Description=Spotipi Service
+Description=Spotipi HTTP Server
 After=redis-server.service
 
 [Service]

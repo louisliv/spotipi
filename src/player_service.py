@@ -15,6 +15,10 @@ class PlayerService(OSService):
         listener.run()
 
 
-if __name__ == "__main__":
+def main():
     service = PlayerService()
     service.run()
+
+
+if __name__ == "__main__":
+    main()

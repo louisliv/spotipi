@@ -28,3 +28,8 @@ coverage
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# build
+spotipi-build/
+spotipi-build.zip
+spotipi-build.tar.gz
