@@ -83,29 +83,6 @@ services:
       ENV: development
     links:
       - cache
-  spotipi-notifications:
-    command: jurigged notifications_service.py --watch /usr/src/app/
-    container_name: spotipi-notifications
-    build:
-      context: ./src
-    image: spotipi-notifications
-    depends_on:
-      - cache
-    volumes:
-      - ./src/:/usr/src/app/
-      - /dev/snd:/dev/snd
-      - /etc/modprobe.d:/etc/modprobe.d
-    privileged: true
-    environment:
-      REDIS_HOST: cache
-      REDIS_PORT: 6379
-      PULSE_SERVER: unix:/run/user/1000/pulse/native
-      ENV: development
-    devices:
-      - "/dev/snd:/dev/snd"
-      - "/etc/modprobe.d:/etc/modprobe.d"
-    links:
-      - cache
   rfid-reader:
     command: jurigged /usr/src/app/reader.py --watch /usr/src/app/
     container_name: rfid-reader

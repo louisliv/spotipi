@@ -4,7 +4,7 @@ from time import sleep
 try:
     from mfrc522 import SimpleMFRC522
 except Exception as e:
-    logging.error("Failed to initialize RFID reader.")
+    logging.error("Failed to initialize RFID reader on import.")
     logging.warning("Using fake RFID reader")
     from spotipi.fake_mfrc import FakeSimpleMFRC as SimpleMFRC522
 
@@ -21,7 +21,7 @@ class RFIDReader:
         try:
             self.reader = SimpleMFRC522()
         except Exception as e:
-            logger.error("Failed to initialize RFID reader")
+            logger.error("Failed to initialize RFID reader on init")
             logger.warning("Using fake RFID reader")
             self.reader = FakeSimpleMFRC()
 
@@ -32,7 +32,7 @@ class RFIDReader:
         print(f"Card Value is: {id}")
         logger.info(f"Card Value is: {id}")
         return str(id), text
-    
+
     def close(self):
         self.reader.close()
 
@@ -66,6 +66,7 @@ class RFIDReaderListener:
 
 
 def main():
+    logger.info("Starting RFID reader...")
     reader = RFIDReaderListener()
     reader.listen()
 

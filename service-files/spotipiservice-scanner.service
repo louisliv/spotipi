@@ -9,6 +9,7 @@ ExecStart=spotipi-scanner
 EnvironmentFile=-/etc/spotipi-watchers/spotipi-watchers.conf
 Environment=REDIS_HOST=127.0.0.1
 Environment=REDIS_PORT=6379
+Environment=ENV=production
 
 [Install]
 WantedBy=multi-user.target

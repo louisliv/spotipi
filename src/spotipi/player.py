@@ -6,11 +6,13 @@ from typing import Optional
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from spotipy.exceptions import SpotifyException
 
 from spotipi.database import SessionLocal
 from spotipi.models import RFIDNumber
 from spotipi.utils import Settings
 from spotipi.pubsub.pubsub_manager import PubSubManager
+from spotipi.notification import NotificationSound
 
 
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
@@ -36,6 +38,7 @@ class PlayerResponses(enum.Enum):
 
 class BasePlayer:
     def __init__(self, device_id: str = SPOTIFY_DEVICE_ID) -> None:
+        logging.info(f"SpotifyPlayer: Initializing player with device_id: {device_id}")
         self.device_id = device_id
         self.db = SessionLocal()
         self.settings = Settings()
@@ -43,16 +46,37 @@ class BasePlayer:
         self.pubsub_manager.connect()
 
     def handle_message(self, message: dict):
-        logging.info("Player message received: ", message)
-        message_type = message["type"]
-        if message_type == PlayerResponses.playing.value:
-            return self.play(message["rfid_number"])
-        elif message_type == PlayerResponses.paused.value:
-            return self.pause()
-        elif message_type == PlayerResponses.playing_current_track.value:
-            return self.play_current_track()
-        elif message_type == "stop":
-            return self.stop()
+        try:
+            message_type = message["type"]
+            if message_type == PlayerResponses.playing.value:
+                return self.play(message["rfid_number"])
+            elif message_type == PlayerResponses.paused.value:
+                return self.pause()
+            elif message_type == PlayerResponses.playing_current_track.value:
+                return self.play_current_track()
+            elif message_type == "stop":
+                return self.stop()
+        except Exception as e:
+            self.handle_error_from_spotify(e)
+
+    def handle_error_from_spotify(self, error: Exception):
+        if type(error) == SpotifyException:
+            # Log the error
+            logging.exception(error)
+            if error.http_status == 403:
+                self.play_notification("Spotify is not available")
+                return
+            elif error.http_status == 404:
+                self.play_notification(
+                    "The device is not available. Please start Spotify on your device."
+                )
+                return
+            self.play_notification("An unexpected error occurred")
+            return
+        self.play_notification("An unexpected error occurred")
+
+    def play_notification(self, message: str):
+        NotificationSound(message)
 
     @abstractmethod
     def play(self, id: str) -> PlayerResponses:
@@ -88,14 +112,12 @@ class FakePlayer(BasePlayer):
         if not rfid_number:
             error_msg = "No RFID number found"
             logging.error(error_msg)
-            self.pubsub_manager.publish("notifications", {"message": error_msg})
+            self.play_notification(error_msg)
             self.play_current_track()
             return PlayerResponses.no_rfid.value
 
         logging.info(f"Playing {rfid_number.spotify_name}")
-        self.pubsub_manager.publish(
-            "notifications", {"message": f"Playing {rfid_number.spotify_name}"}
-        )
+        self.play_notification(f"Playing {rfid_number.spotify_name}")
         return PlayerResponses.playing.value
 
     def pause(self) -> PlayerResponses:
@@ -143,15 +165,13 @@ class SpotifyPlayer(BasePlayer):
         if not rfid_number:
             error_msg = "No RFID number found"
             logging.error(error_msg)
-            self.pubsub_manager.publish("notifications", {"message": error_msg})
+            self.play_notification(error_msg)
             self.play_current_track()
             return PlayerResponses.no_rfid.value
 
         spotify_uri = f"spotify:{rfid_number.spotify_token_type.value}:{rfid_number.spotify_token}"
 
-        self.pubsub_manager.publish(
-            "notifications", {"message": f"Playing {rfid_number.spotify_name}"}
-        )
+        self.play_notification(f"Playing {rfid_number.spotify_name}")
 
         self.set_shuffle_state()
 

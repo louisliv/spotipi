@@ -6,6 +6,7 @@ import logging
 from sqlalchemy.orm import Session
 
 from spotipi.models import RFIDNumber
+from spotipi.notification import NotificationSound
 import spotipi.schemas as schemas
 
 from spotipi.player import PlayerResponses
@@ -68,13 +69,11 @@ def set_rfid_reading_mode(reading_mode: bool, coming_from = "unknown"):
             "type": PlayerResponses.paused.value
         })
 
-        manager.publish("notifications", {
-            "message": "Reading mode"
-        })
+        # Play a notification sound
+        NotificationSound("Reading mode")
     else:
-        manager.publish("notifications", {
-            "message": "Exiting reading mode"
-        })
+        # Play a notification sound
+        NotificationSound("Exiting reading mode")
         manager.publish("player", {
             "type": PlayerResponses.playing_current_track.value,
             "rfid_number": coming_from
