@@ -30,6 +30,7 @@ setup(
             "spotipi-fake-mfrc=spotipi.fake_mfrc:send_fake_rfid",
             "spotipi-player=player_service:main",
             "spotipi-scanner=scanner_service:main",
+            "spotipi-player-cmd=spotipi.cmd_line_utils.player:main",
         ],
     },
 )
