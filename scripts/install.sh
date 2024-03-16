@@ -3,6 +3,17 @@
 # Install spotipi wheels
 sudo pip3 install *.whl --break-system-packages --force-reinstall
 
+# Copy the frontend build to the /var/www/spotipi directory
+sudo rm -rf /var/www/spotipi
+sudo mkdir -p /var/www/spotipi
+sudo cp -r client/build/* /var/www/spotipi
+
+# Copy the nginx configuration file to the /etc/nginx/sites-enabled directory
+sudo cp spotipi-nginx.conf /etc/nginx/sites-enabled
+
+# Remove the default nginx configuration file from the /etc/nginx/sites-enabled directory
+sudo rm -f /etc/nginx/sites-enabled/default
+
 # Stop and remove all spotipi systemd services if present
 sudo systemctl stop spotipiservice-player
 sudo systemctl stop spotipiservice-reader
@@ -33,3 +44,6 @@ sudo systemctl start spotipiservice-player
 sudo systemctl start spotipiservice-reader
 sudo systemctl start spotipiservice-scanner
 sudo systemctl start spotipiservice-server
+
+# Restart the nginx service
+sudo systemctl restart nginx
