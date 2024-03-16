@@ -49,7 +49,7 @@ class BasePlayer:
         try:
             message_type = message["type"]
             if message_type == PlayerResponses.playing.value:
-                return self.play(message["rfid_number"])
+                return self.play(message.get("rfid_number"))
             elif message_type == PlayerResponses.paused.value:
                 return self.pause()
             elif message_type == PlayerResponses.playing_current_track.value:
@@ -60,9 +60,9 @@ class BasePlayer:
             self.handle_error_from_spotify(e)
 
     def handle_error_from_spotify(self, error: Exception):
+        logging.exception(error)
         if type(error) == SpotifyException:
             # Log the error
-            logging.exception(error)
             if error.http_status == 403:
                 self.play_notification("Spotify is not available")
                 return
@@ -153,10 +153,17 @@ class SpotifyPlayer(BasePlayer):
             )
         )
 
-    def play(self, id: str) -> PlayerResponses:
+    def play(self, id: str = None) -> PlayerResponses:
         self.spotify_player.transfer_playback(
             device_id=self.device_id, force_play=False
         )
+
+        if not id:
+            # If no id is provided, play the current track. This usually happens
+            # when the play command is sent from the cmd line application without
+            # an rfid given.
+            self.play_current_track()
+            return PlayerResponses.playing_current_track.value
 
         rfid_number: Optional[RFIDNumber] = (
             self.db.query(RFIDNumber).filter(RFIDNumber.number == str(id)).first()
@@ -191,7 +198,7 @@ class SpotifyPlayer(BasePlayer):
 
     def play_current_track(self) -> PlayerResponses:
         current_state = self.get_playback_state()
-        if not current_state.get("is_playing"):
+        if current_state.get("is_playing"):
             return PlayerResponses.playing.value
         self.spotify_player.start_playback(device_id=self.device_id)
         return PlayerResponses.playing.value
