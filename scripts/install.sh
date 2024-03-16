@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Install the packages required
+sudo apt-get update
+sudo apt-get install -y python3-pip nginx ffmpeg
+
 # Install spotipi wheels
 sudo pip3 install *.whl --break-system-packages --force-reinstall
 
